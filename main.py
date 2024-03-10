@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-from operacoes import inserir_nota
+from operacoes import inserir_nota, consulta_nota
 
 def opcoes():
     print('opcoes:')
     print('1 - adicionar nota')
+    print('2 - consultar nota')
+    print('0 - sair')
 
 def sair():
     print('Saindo ...')
@@ -15,6 +17,7 @@ def main():
 
     opcao_map = {
         1: inserir_nota,
+        2: consulta_nota,
         0: sair
 
     }
