@@ -18,7 +18,7 @@ gerenciador mais refinado com um banco de dados com mais informacoes poderemos g
 
 ### Estrutura DB
 
-estou usando o db postegresql o sql de criacao esta no repositorio
+estou usando o db postgreSQL o SQL de criacao esta no repositorio
 
 
 
