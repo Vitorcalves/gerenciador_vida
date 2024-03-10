@@ -35,7 +35,8 @@ def listar_notas_db():
         return
     with conexao:
         with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("SELECT * FROM notas")
+            cursor.execute("SELECT * FROM notas WHERE consultada = false")
             notas = cursor.fetchall()
     conexao.close()
     return notas
+
