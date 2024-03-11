@@ -83,3 +83,23 @@ def inserir_produto_dicionario_db(codigo_produto, nome_produto, id_empresa):
         with conexao.cursor() as cursor:
             cursor.execute("INSERT INTO dicionario_produtos (id_externo, nome_externo, empresa) VALUES (%s, %s, %s)", (codigo_produto, nome_produto, id_empresa))
     conexao.close()
+
+def inserir_conteudo_nota_db(nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, UN):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("INSERT INTO conteudo_nota (nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, un) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, UN))
+    conexao.close()
+    
+def concluir_consulta_nota_db(id_nota):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("UPDATE notas SET consultada = true WHERE id_nota = %s", (id_nota,))
+    conexao.close()

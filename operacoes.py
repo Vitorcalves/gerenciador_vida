@@ -1,7 +1,9 @@
-from db import inserir_nota_db, listar_notas_db, buscar_empresa_db, cadastrar_empresa_db, buscar_produto_dicionario_db, inserir_produto_dicionario_db
+from db import inserir_nota_db, listar_notas_db, buscar_empresa_db, cadastrar_empresa_db, buscar_produto_dicionario_db, inserir_produto_dicionario_db, inserir_conteudo_nota_db, concluir_consulta_nota_db
 import requests
 from bs4 import BeautifulSoup
 import json
+import time
+import random
 
 def inserir_nota():
     link_nota = input('link da nota: ')
@@ -12,31 +14,31 @@ def consulta_nota():
     notas = listar_notas_db()
     cont = 0
     for nota in notas:
-        print(cont)
-        print(nota['link_nota'])
-        cont += 1
-    opcao = int(input('escolha uma nota: '))
-    link_nota = notas[opcao]['link_nota']
-    dados = requisicao(link_nota)
-    try:
-        id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
-        print(f'empresa {dados[0]["nome"]} já cadastrada')
-    except:
-        cadastrar_empresa_db(dados[0]['nome'], dados[0]['cnpj'])
-        id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
-        print(f'empresa {dados[0]["nome"]} cadastrada com sucesso')
+        dados = requisicao(nota['link_nota'])
+        data = ((dados[0]['data_emissao']).split(' '))[0]
 
-    for produto in dados[0]['tabela']:
         try:
-            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
-            print(f'produto {produto["nome"]} já cadastrado')
+            id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
         except:
-            inserir_produto_dicionario_db(produto['codigo'], produto['nome'], id_empresa)
-            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
-            print(f'produto {produto["nome"]} cadastrado com sucesso')
-        
+            cadastrar_empresa_db(dados[0]['nome'], dados[0]['cnpj'])
+            id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
 
-    print(json.dumps(dados, indent=2))
+        for produto in dados[0]['tabela']:
+            try:
+                id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+            except:
+                inserir_produto_dicionario_db(produto['codigo'], produto['nome'], id_empresa)
+                id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+            if produto['quantidade'] != 1:
+                valor_unitario = round((produto['valor_total'] / produto['quantidade']), 2)
+                inserir_conteudo_nota_db(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], valor_unitario, produto['valor_total'], data, produto['un'])
+            else:
+                inserir_conteudo_nota_db(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], produto['valor_total'], produto['valor_total'], data, produto['un'])
+        concluir_consulta_nota_db(nota['id_nota'])
+        espera = round(random.uniform(5, 9), 2)
+        print(f'Aguardando {espera} segundos...')
+        time.sleep(espera)        
+
 
 def requisicao(link):
     # cabecario para simular um navegador pois alguns sites bloqueiam requisições de bots
