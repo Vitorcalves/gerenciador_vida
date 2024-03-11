@@ -1,4 +1,4 @@
-from db import inserir_nota_db, listar_notas_db
+from db import inserir_nota_db, listar_notas_db, buscar_empresa_db, cadastrar_empresa_db, buscar_produto_dicionario_db, inserir_produto_dicionario_db
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -15,10 +15,22 @@ def consulta_nota():
         print(cont)
         print(nota['link_nota'])
         cont += 1
-    
     opcao = int(input('escolha uma nota: '))
     link_nota = notas[opcao]['link_nota']
     dados = requisicao(link_nota)
+    try:
+        id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+    except:
+        cadastrar_empresa_db(dados[0]['nome'], dados[0]['cnpj'])
+        id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+
+    for produto in dados[0]['tabela']:
+        try:
+            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_produto']
+        except:
+            inserir_produto_dicionario_db(produto['codigo'], produto['nome'], id_empresa)
+            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_produto']
+
     print(json.dumps(dados, indent=2))
 
 def requisicao(link):
@@ -30,19 +42,29 @@ def requisicao(link):
         requisicao = requests.get(link, headers=headers)
         html_content = requisicao.text
         soup = BeautifulSoup(html_content, 'html.parser')
+
+        # tratamento dos dados pensando na fazenda.mg
+
         tabble = soup.find_all('table', class_='table table-striped')[0]
+
+
         nome_empresa = soup.find('th', class_='text-center text-uppercase').text.strip()
-        info_empresa = soup.find('td', style=lambda value: value and 'border-top: 0px;' in value).text.strip()
-        cnpj, inscricao_estadual = info_empresa.split(', ')
-        cnpj = cnpj.replace('CNPJ: ', '').strip()
+
+
+        info_empresa = (
+                soup.find(
+                    'td', style=lambda value: value and 'border-top: 0px;' in value
+                ).text.strip()
+            ).split(', ')
+
+
+        cnpj = info_empresa[0].replace('CNPJ: ', '').strip()
+
+
         dados = []
-        informacoes_gerais = soup.find_all('table', class_='table table-hover')[5]  # Ajuste o índice conforme necessário
-        
-        # Encontrar a linha que contém a data de emissão e extrair o valor
-        data_emissao = ""
-        print(informacoes_gerais)
+        informacoes_gerais = soup.find_all('table', class_='table table-hover')[5]
+
         data_emissao = informacoes_gerais.find_all('tr')[1].find_all('td')[3].text.strip()
-        print(data_emissao)
 
         tabela = []
         for linha in tabble.find_all('tr'):

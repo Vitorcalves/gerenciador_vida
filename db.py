@@ -40,3 +40,46 @@ def listar_notas_db():
     conexao.close()
     return notas
 
+def buscar_empresa_db(cnpj):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT * FROM empresas WHERE cnpj = %s", (cnpj,))
+            empresa = cursor.fetchone()
+    conexao.close()
+    return empresa
+
+def cadastrar_empresa_db(nome, cnpj):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("INSERT INTO empresas (cnpj, nome_empresa) VALUES (%s, %s)", (cnpj, nome))
+    conexao.close()
+
+def buscar_produto_dicionario_db(codigo_produto, id_empresa):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT * FROM dicionario_produtos WHERE id_externo = %s AND id_empresa = %s", (codigo_produto, id_empresa))  
+            produto = cursor.fetchone()
+    conexao.close()
+    return produto
+
+def inserir_produto_dicionario_db(codigo_produto, nome_produto, id_empresa):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("INSERT INTO dicionario_produtos (id_externo, nome_externo, empresa) VALUES (%s, %s, %s)", (codigo_produto, nome_produto, id_empresa))
+    conexao.close()
