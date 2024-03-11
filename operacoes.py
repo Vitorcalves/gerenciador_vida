@@ -20,16 +20,21 @@ def consulta_nota():
     dados = requisicao(link_nota)
     try:
         id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+        print(f'empresa {dados[0]["nome"]} já cadastrada')
     except:
         cadastrar_empresa_db(dados[0]['nome'], dados[0]['cnpj'])
         id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+        print(f'empresa {dados[0]["nome"]} cadastrada com sucesso')
 
     for produto in dados[0]['tabela']:
         try:
-            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_produto']
+            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+            print(f'produto {produto["nome"]} já cadastrado')
         except:
             inserir_produto_dicionario_db(produto['codigo'], produto['nome'], id_empresa)
-            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_produto']
+            id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+            print(f'produto {produto["nome"]} cadastrado com sucesso')
+        
 
     print(json.dumps(dados, indent=2))
 

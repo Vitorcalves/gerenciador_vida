@@ -69,7 +69,7 @@ def buscar_produto_dicionario_db(codigo_produto, id_empresa):
         return
     with conexao:
         with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("SELECT * FROM dicionario_produtos WHERE id_externo = %s AND id_empresa = %s", (codigo_produto, id_empresa))  
+            cursor.execute("SELECT * FROM dicionario_produtos WHERE id_externo = %s AND empresa = %s", (codigo_produto, id_empresa))  
             produto = cursor.fetchone()
     conexao.close()
     return produto
