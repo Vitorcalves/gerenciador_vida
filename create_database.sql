@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.produtos
 (
     id_interno smallint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 32767 CACHE 1 ),
     nome character varying(256) COLLATE pg_catalog."default" NOT NULL,
+    barras bigint NOT NULL DEFAULT nextval('produtos_barras_seq'::regclass),
     CONSTRAINT produtos_pkey PRIMARY KEY (id_interno)
 )
 
@@ -67,14 +68,13 @@ TABLESPACE pg_default;
 
 -- DROP TABLE IF EXISTS public.dicionario_produtos;
 
-
 CREATE TABLE IF NOT EXISTS public.dicionario_produtos
 (
     id_dicionario integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
     nome_externo character varying(256) COLLATE pg_catalog."default",
-    id_externo smallint NOT NULL,
     empresa smallint NOT NULL,
-    id_produto_interno smallint NOT NULL,
+    id_produto_interno smallint,
+    id_externo bigint NOT NULL DEFAULT nextval('dicionario_produtos_id_externo_seq'::regclass),
     CONSTRAINT dicionario_produtos_pkey PRIMARY KEY (id_dicionario),
     CONSTRAINT empresa_id FOREIGN KEY (empresa)
         REFERENCES public.empresas (id_empresa) MATCH SIMPLE
@@ -102,6 +102,9 @@ CREATE TABLE IF NOT EXISTS public.conteudo_nota
     valor_produto real NOT NULL DEFAULT 0.00,
     data_registro date NOT NULL,
     nf_registro smallint NOT NULL,
+    "UN" character varying(10) COLLATE pg_catalog."default",
+    quantidade real NOT NULL,
+    valor_total real,
     CONSTRAINT conteudo_nota_pkey PRIMARY KEY (id_registro),
     CONSTRAINT nf FOREIGN KEY (nf_registro)
         REFERENCES public.notas (id_nota) MATCH SIMPLE
@@ -109,7 +112,7 @@ CREATE TABLE IF NOT EXISTS public.conteudo_nota
         ON DELETE NO ACTION
         NOT VALID,
     CONSTRAINT produto FOREIGN KEY (produto_registro)
-        REFERENCES public.produtos (id_interno) MATCH SIMPLE
+        REFERENCES public.dicionario_produtos (id_dicionario) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
         NOT VALID
