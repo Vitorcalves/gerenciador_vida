@@ -18,7 +18,7 @@ def conectar_db():
         print(error)
         return None  
 
-def inserir_nota_db(dado):
+def inserir_nota(dado):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -28,7 +28,7 @@ def inserir_nota_db(dado):
             cursor.execute("INSERT INTO notas (link_nota) VALUES (%s)", (dado,))
     conexao.close()
 
-def listar_notas_db():
+def listar_notas():
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -40,7 +40,7 @@ def listar_notas_db():
     conexao.close()
     return notas
 
-def buscar_empresa_db(cnpj):
+def buscar_empresa(cnpj):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -52,7 +52,7 @@ def buscar_empresa_db(cnpj):
     conexao.close()
     return empresa
 
-def cadastrar_empresa_db(nome, cnpj):
+def cadastrar_empresa(nome, cnpj):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -62,7 +62,7 @@ def cadastrar_empresa_db(nome, cnpj):
             cursor.execute("INSERT INTO empresas (cnpj, nome_empresa) VALUES (%s, %s)", (cnpj, nome))
     conexao.close()
 
-def buscar_produto_dicionario_db(codigo_produto, id_empresa):
+def buscar_produto_dicionario(codigo_produto, id_empresa):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -74,7 +74,7 @@ def buscar_produto_dicionario_db(codigo_produto, id_empresa):
     conexao.close()
     return produto
 
-def inserir_produto_dicionario_db(codigo_produto, nome_produto, id_empresa):
+def inserir_produto_dicionario(codigo_produto, nome_produto, id_empresa):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -84,7 +84,7 @@ def inserir_produto_dicionario_db(codigo_produto, nome_produto, id_empresa):
             cursor.execute("INSERT INTO dicionario_produtos (id_externo, nome_externo, empresa) VALUES (%s, %s, %s)", (codigo_produto, nome_produto, id_empresa))
     conexao.close()
 
-def inserir_conteudo_nota_db(nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, UN):
+def inserir_conteudo_nota(nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, UN):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -94,7 +94,7 @@ def inserir_conteudo_nota_db(nf_registro, empresa, produto, quantidade, valor_un
             cursor.execute("INSERT INTO conteudo_nota (nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, un) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (nf_registro, empresa, produto, quantidade, valor_unitario, valor_total, data_registro, UN))
     conexao.close()
     
-def concluir_consulta_nota_db(id_nota):
+def concluir_consulta_nota(id_nota):
     conexao = conectar_db()
     if conexao == None:
         print('falha na conexao com banco')
@@ -102,4 +102,50 @@ def concluir_consulta_nota_db(id_nota):
     with conexao:
         with conexao.cursor() as cursor:
             cursor.execute("UPDATE notas SET consultada = true WHERE id_nota = %s", (id_nota,))
+    conexao.close()
+
+def dicionario_sem_produto():
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT * FROM dicionario_produtos WHERE id_produto_interno IS NULL ORDER BY nome_externo")
+            produtos = cursor.fetchall()
+    conexao.close()
+    return produtos
+
+def lista_produtos():
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT * FROM produtos JOIN unidade_medida ON produtos.unidade_medida = unidade_medida.id_um ORDER BY nome")
+            produtos = cursor.fetchall()
+    conexao.close()
+    return produtos
+
+def inserir_produto(nome_produto, un, quantidade):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("INSERT INTO produtos (nome, unidade_medida, quantidade) VALUES (%s, %s, %s) RETURNING id_interno", (nome_produto, un, quantidade))
+            id_produto = cursor.fetchone()[0]
+    conexao.close()
+    return id_produto
+
+def associar_produto_dicionario(id_produto, id_dicionario):
+    conexao = conectar_db()
+    if conexao == None:
+        print('falha na conexao com banco')
+        return
+    with conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("UPDATE dicionario_produtos SET id_produto_interno = %s WHERE id_dicionario = %s", (id_produto, id_dicionario))
     conexao.close()

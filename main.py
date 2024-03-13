@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-from operacoes import inserir_nota, consulta_nota
+from operacoes import inserir_nota, consulta_nota, unificar_produtos
 
 def opcoes():
     print('opcoes:')
     print('1 - adicionar nota')
     print('2 - consultar nota')
+    print('3 - unificar produtos')
     print('0 - sair')
 
 def sair():
@@ -18,6 +19,7 @@ def main():
     opcao_map = {
         1: inserir_nota,
         2: consulta_nota,
+        3: unificar_produtos,
         0: sair
 
     }

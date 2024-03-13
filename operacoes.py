@@ -1,4 +1,4 @@
-from db import inserir_nota_db, listar_notas_db, buscar_empresa_db, cadastrar_empresa_db, buscar_produto_dicionario_db, inserir_produto_dicionario_db, inserir_conteudo_nota_db, concluir_consulta_nota_db
+import db as database
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -7,34 +7,34 @@ import random
 
 def inserir_nota():
     link_nota = input('link da nota: ')
-    inserir_nota_db(link_nota)
+    database.inserir_nota(link_nota)
     print('nota inserida com sucesso')
 
 def consulta_nota():
-    notas = listar_notas_db()
+    notas = database.listar_notas()
     cont = 0
     for nota in notas:
         dados = requisicao(nota['link_nota'])
         data = ((dados[0]['data_emissao']).split(' '))[0]
 
         try:
-            id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+            id_empresa = database.buscar_empresa(dados[0]['cnpj'])['id_empresa']
         except:
-            cadastrar_empresa_db(dados[0]['nome'], dados[0]['cnpj'])
-            id_empresa = buscar_empresa_db(dados[0]['cnpj'])['id_empresa']
+            database.cadastrar_empresa(dados[0]['nome'], dados[0]['cnpj'])
+            id_empresa = database.buscar_empresa(dados[0]['cnpj'])['id_empresa']
 
         for produto in dados[0]['tabela']:
             try:
-                id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+                id_produto = database.buscar_produto_dicionario(produto['codigo'],id_empresa)['id_dicionario']
             except:
-                inserir_produto_dicionario_db(produto['codigo'], produto['nome'], id_empresa)
-                id_produto = buscar_produto_dicionario_db(produto['codigo'],id_empresa)['id_dicionario']
+                database.inserir_produto_dicionario(produto['codigo'], produto['nome'], id_empresa)
+                id_produto = database.buscar_produto_dicionario(produto['codigo'],id_empresa)['id_dicionario']
             if produto['quantidade'] != 1:
                 valor_unitario = round((produto['valor_total'] / produto['quantidade']), 2)
-                inserir_conteudo_nota_db(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], valor_unitario, produto['valor_total'], data, produto['un'])
+                database.inserir_conteudo_nota(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], valor_unitario, produto['valor_total'], data, produto['un'])
             else:
-                inserir_conteudo_nota_db(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], produto['valor_total'], produto['valor_total'], data, produto['un'])
-        concluir_consulta_nota_db(nota['id_nota'])
+                database.inserir_conteudo_nota(nota['id_nota'], id_empresa, id_produto, produto['quantidade'], produto['valor_total'], produto['valor_total'], data, produto['un'])
+        database.concluir_consulta_nota(nota['id_nota'])
         espera = round(random.uniform(5, 9), 2)
         print(f'Aguardando {espera} segundos...')
         time.sleep(espera)        
@@ -103,3 +103,32 @@ def requisicao(link):
 
     except Exception as e:
         print(f'erro ao fazer requisição: {e}')
+
+def unificar_produtos():
+    dados = database.dicionario_sem_produto()
+    produtos = database.lista_produtos()
+    for dicionario in dados:
+        
+        print('produtos disponíveis:')
+        for produto in produtos:
+            print(produto['id_interno'])
+            print(produto['nome'], produto['nome_um'], produto['quantidade'])
+            print('-------------------')
+        print(dicionario['nome_externo'])
+        opcao = input('digite o id do produto que deseja associar ao dicionario ou 0 para criar um novo: ')
+        if opcao == '':
+            break
+        if int(opcao) < 0:
+            continue
+        if int(opcao) == 0:
+            nome = input('digite o nome do produto: ')
+            un = input('digite a unidade de medida: ')
+            quantidade = input('digite a quantidade: ')
+            id_produto = database.inserir_produto(nome, un, quantidade)
+            database.associar_produto_dicionario(id_produto, dicionario['id_dicionario'])
+            produtos = database.lista_produtos()
+        if int(opcao) > 0:
+            database.associar_produto_dicionario(opcao, dicionario['id_dicionario'])
+
+            
+
